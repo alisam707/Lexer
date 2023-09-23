@@ -6,7 +6,7 @@ class Machine {
 
 private:
 
-	Machine* currentState;
+	States* currentState;
 
 public:
 
@@ -32,12 +32,21 @@ public:
 			//MAKE ERROR STATEMENT
 		}
 	}
+};
 
-	void changeState(int* stateChangeTo) {
+class States {
+
+private:
+
+	Machine* _currentFSM;
+
+public:
+
+	void changeState(int stateChangeTo) {
 		//delete current state
 		if (currentState) {
 			delete currentState;
-			currentState = &stateChangeTo;
+			currentState = stateChangeTo;
 			cout << *currentState << endl;
 		}
 		//set new state to stateChangeTo
