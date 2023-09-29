@@ -41,7 +41,8 @@ class Lexer {
 private:
     std::ifstream file; // Input file stream
     char current_char; // Current character being processed
-	int currentState;	//Current state of fsm
+  int currentState = 1; // Initialize currentState with the value 1
+  int temp = currentState; // Copy the value of currentState to temp
 
     // Helper function to check if a character is whitespace
     bool isWhitespace(char c) {
@@ -60,61 +61,65 @@ private:
                 c == '[' || c == ']' || c == '{' || c == '}');
     }
 
-	Token switchStates(switchTo){
+	void switchStates(int switchTo){
 		//set new state
-		currentState = switchTo;
+		temp = switchTo;
 	}
 
-	Token IdStateCheck(){
+	int IdStateCheck(){
 		//return current state
-		return currentState;
+		return temp;
 	}
+  Token ValidState(std::string lexeme){
+    if (IdStateCheck() == 4){
+			return { TokenType::IDENTIFIER, lexeme };
+		}
+		else {
+      std::cout << IdStateCheck() << " " << lexeme << std::endl;
+			return {TokenType::ERROR, lexeme};
+		}
+  }
 
     // Function to scan and recognize an identifier
 	Token scanIdentifier() {
-		/*
+    //parse identifier and set state
 		std::string lexeme;
-		while (std::isalnum(current_char) || current_char == '_') {
-			lexeme += current_char;
-			file.get(current_char);
-		}
-*/
 		while (std::isalpha(current_char) || std::isdigit(current_char)){
 			if (std::isalpha(current_char)){
 				switchStates(2);
 				lexeme += current_char;
-				file.get(current_char)
+				file.get(current_char);
 			}
 			else if (std::isdigit(current_char)){
-				if (curentState != 1){
+				if (IdStateCheck() != 1){
 					switchStates(3);
 					lexeme += current_char;
 					file.get(current_char);
 				}
 				else{
 					switchStates(5);
-					break;
+					return ValidState(lexeme);
 				}
-			}
+     }
 		}
-		if (IdStateCheck() == 2) {switchStates(4)};
-
+    if (current_char == ' ' || current_char == '\n' || isSeparator(current_char)){
+      if (IdStateCheck() == 2) {
+        switchStates(4);
+      }
+      else {
+        switchStates(5);
+      }
+    }
 		// Check if the lexeme matches any of the keywords
 		if (lexeme == "while") {
 			return { TokenType::KEYWORD, lexeme }; // Recognized as a keyword
 		}
-
-		if (IdStateCheck() == 4){
-			return return { TokenType::IDENTIFIER, lexeme };
-		}
-		else {
-			return ("ERROR: Invalid Identifier");
-		}
+    return ValidState(lexeme);
 	}
 
 
     // Function to scan and recognize a real number or integer
-    Token scanReal() {
+  Token scanReal() {
         std::string lexeme;
         while (std::isdigit(current_char)) {
             lexeme += current_char;
@@ -176,8 +181,8 @@ public:
                     file.get(current_char); // Skip whitespace
             }
             else if (std::isalpha(current_char) || current_char == '_') {
-                scanIdentifier(); // Scan and recognize an identifier
-				return IdStateCheck();
+              return scanIdentifier(); // Scan and recognize an identifier
+              
             }
             else if (std::isdigit(current_char)) {
                 return scanReal(); // Scan and recognize a real number or integer
@@ -200,11 +205,11 @@ public:
 
 int main() {
     // Create a lexer with the input file "source_code.txt"
-    Lexer lexer("source_code.txt");
+    Lexer lexer("test.txt"); // Use double quotes for the filename
 
     // Declare a Token variable to store the current token
     Token token;
-
+    
     // Print the header for the output
     std::cout << "Output:" << std::endl;
     std::cout << "token lexeme" << std::endl;
@@ -213,6 +218,7 @@ int main() {
     while (true) {
         // Get the next token from the lexer
         token = lexer.getNextToken();
+        
 
         // Check if the end of the file is reached
         if (token.type == TokenType::END_OF_FILE)
