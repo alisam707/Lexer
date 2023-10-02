@@ -204,6 +204,8 @@ public:
 };
 
 int main() {
+    std::ofstream output_file("output.txt");
+
     // Create a lexer with the input file "source_code.txt"
     Lexer lexer("test.txt"); // Use double quotes for the filename
 
@@ -226,6 +228,8 @@ int main() {
 
         // Print the token type and lexeme in the specified format
         std::cout << tokenTypeToString(token.type) << " " << token.lexeme << std::endl;
+        output_file << tokenTypeToString(token.type) << " " << token.lexeme << std::endl;
+
     }
 
     // Return 0 to indicate successful execution
