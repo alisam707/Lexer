@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 [* operator *]
 
 = != > < <= => + - * / ==    
@@ -51,3 +52,18 @@ zZZZ Zzzz a1z4r zbcde12345x  x
   000.  
 
   .123
+=======
+[* Test Case Ex 1 *]
+
+function add3ToPrev(i integer)
+{
+  i = i + 1;
+}
+#
+  integer c;
+  c = 1;
+  put(c);
+  put(addToPrev(c));
+  put(c);
+#
+>>>>>>> Stashed changes

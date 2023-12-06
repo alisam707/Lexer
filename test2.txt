@@ -1,0 +1,13 @@
+[* Test Case Ex 2 *]
+
+function subtractByNine(k integer)
+{
+  k = k - 9;
+}  
+#
+  integer k;
+  k = 100;
+  put(k);
+  put(subtractByNine(k));
+  put(k);
+#

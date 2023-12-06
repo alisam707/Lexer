@@ -1,0 +1,7 @@
+Token: identifier          Lexeme: function            
+	<RAT23F> -> <Opt Function Definitions> # <Opt Declaration List> <Statement List> #
+	<Opt Function Definition> -> <Function Definition>
+	<Function Definition> -> <Function> <Function Definition Prime>
+	<Function> -> function <Identifier> (<Opt Parameter List>) <Opt Declaration List> <Body>
+Token: invalid identifier  Lexeme: add3ToPrev          
+Error at line 2

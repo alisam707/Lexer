@@ -1,0 +1,13 @@
+[* Test Case Ex 3 *]
+
+function multiplyByTwo(j integer)
+{
+  j = j * 2;
+}  
+#
+  integer j;
+  j = 1;
+  put(j);
+  put(multiplyByTwo(j));
+  put(j);
+#
