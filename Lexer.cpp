@@ -17,8 +17,8 @@ bool Lexer::isSeparator(const char input) const {
 }
 // Function to check if Operator
 bool Lexer::isOperator(const char input) const {
-  int operators[7] = {'+', '-', '/', '*', '<', '>', '='};
-  for (int i = 0; i < 7; i++) {
+  int operators[8] = {'+', '-', '/', '*', '<', '>', '=', '!'};
+  for (int i = 0; i < 8; i++) {
     if (operators[i] == input) {
       return 1;
     }
@@ -28,9 +28,8 @@ bool Lexer::isOperator(const char input) const {
 
 // Function to check if keyword
 bool Lexer::isKeyword(string identifier) const {
-  string keywords[12] = {"while",  "if",    "endif",      "else",
-                         "ret", "get",  "put",   "integer",
-                         "true",   "false", "bool", "real"};
+  string keywords[12] = {"while", "if",      "endif", "else",  "ret",  "get",
+                         "put",   "integer", "true",  "false", "bool", "real"};
   for (int i = 0; i < 12; i++) {
     if (keywords[i] == identifier) {
       return 1;
@@ -67,7 +66,7 @@ int Lexer::Classify(string s) {
     }
     return 3;
   } else if (isdigit(classify_ch)) {
-    // first, check for valid input for real or integer
+    // first, check for valid input for real
     // only accept the string with number or dot(.) sign
     for (int i = 0; i < len; i++) {
       if (s[i] == '.' || isdigit(s[i]))
@@ -94,16 +93,24 @@ int Lexer::Classify(string s) {
 
 // Function returns the column number of the character in the table
 int Lexer::char_to_col(const char input) const {
+  if (isalpha(input))
+    return 1;
+  else if (isdigit(input))
+    return 2;
+  else if (isOperator(input) || isSeparator(input))
+    return 3;
+  else
+    return 4;
+}
+
+// char to column but for real
+int Lexer::char_to_col_real(const char input) const {
   if (isdigit(input))
     return 1;
   else if (input == '.')
     return 2;
-  else if (isalpha(input))
-    return 3;
-  else if (input == '#')
-    return 4;
   else
-    return 5;
+    return 3;
 }
 
 // Finite State Machine for integer
@@ -143,19 +150,23 @@ int Lexer::real_DFSM(string str) {
 
   // DFSM table for real
   /*	0	d	.
-    1	2	0
-    2	2	3
-    3	4	0
-    4	4	0
+      1	2	0
+      2	2	3
+      3	4	0
+      4	4	0
   */
-  int a[5][3] = {{0, 'd', '.'}, {1, 2, 0}, {2, 2, 3}, {3, 3, 4}, {4, 4, 0}};
+  int a[5][3] = {{0, 'd', '.'}, 
+                {1, 2, 0}, 
+                {2, 2, 3}, 
+                {3, 4, 0}, 
+                {4, 4, 0}};
 
   int f[1] = {4};
 
   // convert character to its column number in the table
   int size = str.size();
   for (int i = 0; i < size; i++) {
-    int col = char_to_col(str[i]);
+    int col = char_to_col_real(str[i]);
     state = a[state][col];
 
     // if state = 0, then it is a failing state. Reject immediately
@@ -175,17 +186,20 @@ int Lexer::identifier_DFSM(string str) {
 
   // transition table
   // failing state = 0
-  /*	0	d	.	l	#
-    1	0	0	2	0
-    2	0	0	3	4
-    3	0	0	3	4
-    4	0	0	5	0
-    5	0	0	3	4
+  // accepting state = 4
+  /*	l	d	i	\n
+    1	2	0	0	0
+    2	2	3	0	4
+    3	2	3	0	0
+    4	4 4	0	4
   */
-  int a[6][5] = {{0, 'd', '.', 'l', '#'}, {1, 0, 0, 2, 0}, {2, 0, 0, 3, 4},
-                 {3, 0, 0, 3, 4},         {4, 0, 0, 5, 0}, {5, 0, 0, 3, 4}};
+  int a[5][5] = {{0, 'l', 'd', 'i', '\n'},
+                 {1, 2, 0, 0, 0},
+                 {2, 2, 3, 0, 4},
+                 {3, 2, 3, 0, 0},
+                 {4, 4, 4, 0, 4}};
 
-  int f[4] = {2, 3, 4, 5};
+  int f[2] = {4, 2};
 
   // convert character to its column number in the table
   int size = str.size();
@@ -209,32 +223,33 @@ void Lexer::lexer(ifstream &file) {
   bool found = false;
   char ch = 'c', prevChar = 'c';
 
-  // get the character and add it into a string until see space, separator, or operator
+  // get the character and add it into a string until see space, separator, or
+  // operator
   while (!found) {
     // Update line number for Error Handler in Par.h
-    if (prevChar == '\n'){
+    if (prevChar == '\n') {
       lineNum++;
     }
     ch = file.get();
     prevChar = ch;
-    
-    //check if input is a comment
+
+    // check if input is a comment
     if (ch == '[') {
       ch = file.get();
-      if (ch == '*'){
+      if (ch == '*') {
         ch = file.get();
-        while (ch != '*'){
+        while (ch != '*') {
           ch = file.get();
           prevChar = ch;
         }
         ch = file.get();
-        if (ch == ']' && prevChar == '*'){
-          //comment successfully skipped
+        if (ch == ']' && prevChar == '*') {
+          // comment successfully skipped
           ch = file.get();
         }
       }
     }
-    
+
     // check if current character is a separator, operator, whitespace, or eof
     // if yes, put the flag to exit the loop
     if (this->isSeparator(ch) || this->isOperator(ch) || isspace(ch) ||
@@ -289,7 +304,7 @@ void Lexer::lexer(ifstream &file) {
     // return the next char without extracting it from input sequence
     ch = file.peek();
 
-    /*check for valid operators: ==, !=, <=, => 
+    /*check for valid operators: ==, !=, <=, =>
     if current char and next char is a valid operator
     add next char to string and move to the next location char
     to keep track of the checking*/
@@ -316,8 +331,7 @@ void Lexer::lexer(ifstream &file) {
     if (isSeparator(str[0])) {
       this->setLexeme(str);
       this->setToken("separator");
-    }
-    else {
+    } else {
       this->setLexeme(str);
       this->setToken("invalid separator");
     }
@@ -332,7 +346,7 @@ void Lexer::lexer(ifstream &file) {
       this->setToken("invalid real");
     }
   }
-  // check token using FSM for real
+  // check token using FSM for int
   else if (classify == 5) {
     state_status = int_DFSM(str);
     this->setLexeme(str);
