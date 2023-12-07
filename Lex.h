@@ -28,6 +28,7 @@ public:
 
   // function returns the column number of the character in the table
   int char_to_col(const char input) const;
+  int char_to_col_real(const char input) const;
 
   // Helper functions checking separator, operator and keyword
   bool isSeparator(const char input) const;
